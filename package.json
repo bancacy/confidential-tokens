@@ -1,34 +1,35 @@
 {
   "name": "confidential-tokens",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Paul Berg (https://paulrberg.com)",
+  "description": "Step-by-step tutorial to get up and running with AZTEC",
   "dependencies": {
-    "@aztec/contract-addresses": "^1.0.4",
-    "@aztec/contract-artifacts": "^1.1.1",
-    "@aztec/dev-utils": "^1.0.6",
-    "@aztec/protocol": "^0.3.1",
-    "aztec.js": "^0.3.2",
+    "@aztec/contract-addresses": "1.0.5",
+    "@aztec/contract-artifacts": "1.2.0",
+    "@aztec/dev-utils": "1.1.2",
+    "@aztec/protocol": "0.3.3",
+    "aztec.js": "0.3.3",
     "bn.js": "4.11.8",
-    "chai": "^4.2.0",
-    "openzeppelin-solidity": "^2.0.0",
-    "web3": "1.0.0-beta.41",
-    "web3-utils": "1.0.0-beta.41"
+    "ethereumjs-tx": "^1.3.7",
+    "openzeppelin-solidity": "2.0.0",
+    "web3": "1.0.0-beta.37"
   },
   "devDependencies": {
     "dotenv": "6.2.0",
-    "truffle-hdwallet-provider": "^1.0.0-web3one.5"
+    "truffle": "^5.0.4",
+    "truffle-hdwallet-provider": "^1.0.4"
   },
   "keywords": [
     "aztec",
+    "blockchain",
     "cryptography",
-    "privacy",
-    "protocol",
     "ethereum",
-    "blockchain"
+    "privacy",
+    "protocol"
   ],
   "license": "MIT",
-  "main": "demo.js",
+  "main": "./src/tutorial.js",
   "scripts": {
-    "demo": "node ./demo.js"
+    "demo": "node ./src/tutorial.js"
   }
 }
