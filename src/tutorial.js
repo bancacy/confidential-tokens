@@ -9,25 +9,25 @@ const Tx = require("ethereumjs-tx");
 const Web3 = require("web3");
 
 // Connect web3 to the Rinkeby testnet via infura
-const url = `https://rinkeby.infura.io/${process.env.INFURA_API_KEY}`;
+// const url = `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`;
+const url = "http://localhost:8545";
 const web3 = new Web3(new Web3.providers.HttpProvider(url));
 const accounts = require("./accounts");
-web3.eth.defaultAccount = accounts.addresses[0];
-accounts.privateKeys.forEach(privateKey => {
-  web3.eth.accounts.wallet.add(`0x${privateKey}`);
-});
 
 // Declare variables
-let aztecAccounts = [], aztecAddresses = {}, notes = [], noteRegistryAddress, proofs = [];
+let aztecAccounts = [], aztecAddresses = {}, notes = [], noteRegistryAddress, proofs = [], proofHashes = [], proofOutputs = [];
 let joinSplit, confidentialToken, erc20Mintable, noteRegistry;
 
 // Get the Rinkeby contracts addresses
+if (!process.env.CONFIDENTIAL_TOKEN_ADDRESS) {
+  console.log("Please set your CONFIDENTIAL_TOKEN_ADDRESS in a .env file first");
+  process.exit(1);
+}
 aztecAddresses = getContractAddressesForNetwork(NetworkId.Rinkeby);
 
-// NetworkId.Rinkeby = 1234;
-// aztecAddresses.joinSplit = "0x43dbD4f0d5e106cA38540Bc94E8041A0d23e9cC3";
-// aztecAddresses.erc20Mintable = "0x351D6e8B1E647FB635CbeF0C155fDD4df21a0007";
-// process.env.CONFIDENTIAL_TOKEN_ADDRESS = "0x61040750d542ca72216E91c6379571b758902Ef2";
+NetworkId.Rinkeby = 1234;
+aztecAddresses.joinSplit = "0xED39feff16E753A0468827C9adb032BE54AB419C";
+aztecAddresses.erc20Mintable = "0xF3b6159EdB47B6f5Cb8608A479f201C636EC6d6d";
 
 joinSplit = new web3.eth.Contract(aztecArtifacts.JoinSplit.abi, aztecAddresses.joinSplit);
 erc20Mintable = new web3.eth.Contract(aztecArtifacts.ERC20Mintable.abi, aztecAddresses.erc20Mintable);
@@ -166,10 +166,10 @@ async function mintAndApproveTokens() {
   }
 
   // Approve AZTEC spending
-  const proofOutputs = proofs.map(({ expectedOutput }) => {
+  proofOutputs = proofs.map(({ expectedOutput }) => {
     return aztec.abiEncoder.outputCoder.getProofOutput(expectedOutput, 0);
   });
-  const proofHashes = proofOutputs.map(proofOutput => {
+  proofHashes = proofOutputs.map(proofOutput => {
     return aztec.abiEncoder.outputCoder.hashProofOutput(proofOutput);
   });
 
@@ -196,34 +196,12 @@ async function mintAndApproveTokens() {
     const receipt = await web3.eth.sendSignedTransaction("0x" + serializedTx);
     console.log(`${JSON.stringify(receipt, null, 2)}\n`);
   }
-  
-  for (let i = 0; i < accounts.addresses.length; ++i) {
-    const nonce = await web3.eth.getTransactionCount(accounts.addresses[i], "pending");
-    const data = noteRegistry.methods
-      .publicApprove(noteRegistryAddress, scalingFactor.mul(tokensTransferred).toString(10))
-      .encodeABI();
-    const rawTx = {
-      nonce: nonce,
-      from: accounts.addresses[i],
-      to: noteRegistryAddress,
-      gasLimit: "0x47B760",
-      gasPrice: "0x12A05F200",
-      data: data,
-      chainId: NetworkId.Rinkeby
-    };
-    const tx = new Tx(rawTx); 
-    const privateKey = Buffer.from(accounts.privateKeys[i], "hex");
-    tx.sign(privateKey);
-    const serializedTx = tx.serialize().toString("hex");
-    const receipt = await web3.eth.sendSignedTransaction("0x" + serializedTx);
-    console.log(`${JSON.stringify(receipt, null, 2)}\n`);
-  }
 
   await sendTransactions();
 }
 
 async function sendTransactions() {
-  // console.log("proofs[0].proofData", proofs[0].proofData);
+  console.log("proofs[0].proofData", proofs[0].proofData);
   const nonce = await web3.eth.getTransactionCount(accounts.addresses[0], "pending");
   const data = confidentialToken.methods
     .confidentialTransfer(proofs[0].proofData)
