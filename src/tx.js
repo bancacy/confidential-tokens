@@ -19,7 +19,7 @@ const sendTx = async ({ from, to, data, privateKey }) => {
   tx.sign(Buffer.from(privateKey, "hex"));
   const serializedTx = tx.serialize().toString("hex");
   const receipt = await web3.eth.sendSignedTransaction("0x" + serializedTx);
-  console.log(`${JSON.stringify(receipt, null, 2)}\n`);
+  console.log(`${JSON.stringify(receipt, null, 4)}\n`);
 };
 
 module.exports = { sendTx };

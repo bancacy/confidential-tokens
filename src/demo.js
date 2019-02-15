@@ -22,17 +22,12 @@ if (!process.env.CONFIDENTIAL_TOKEN_ADDRESS) {
   process.exit(1);
 }
 aztecAddresses = getContractAddressesForNetwork(NetworkId.Rinkeby);
-
-// process.env.CONFIDENTIAL_TOKEN_ADDRESS = "0x61040750d542ca72216E91c6379571b758902Ef2";
-// aztecAddresses.erc20Mintable = "0x351D6e8B1E647FB635CbeF0C155fDD4df21a0007";
-// aztecAddresses.joinSplit = "0x43dbD4f0d5e106cA38540Bc94E8041A0d23e9cC3";
-
 joinSplit = new web3.eth.Contract(aztecArtifacts.JoinSplit.abi, aztecAddresses.joinSplit);
 erc20Mintable = new web3.eth.Contract(aztecArtifacts.ERC20Mintable.abi, aztecAddresses.erc20Mintable);
 confidentialToken = new web3.eth.Contract(aztecArtifacts.ZKERC20.abi, process.env.CONFIDENTIAL_TOKEN_ADDRESS);
 
 // Prepare the notes and the contracts
-async function prepareNotes() {
+async function prepareNotesAndProofs() {
   // Generate a bunch of random accounts
   aztecAccounts = [...new Array(2)].map(() => aztec.secp256k1.generateAccount());
   await fs.writeFile(path.join(__dirname, "aztecAccounts.json"), JSON.stringify(aztecAccounts, null, 4));
@@ -44,9 +39,7 @@ async function prepareNotes() {
     aztec.note.create(aztecAccounts[1].publicKey, 8),
     aztec.note.create(aztecAccounts[0].publicKey, 2)
   ];
-}
 
-function prepareProofs() {
   // Create dem proofs
   proofs[0] = aztec.proof.joinSplit.encodeJoinSplitTransaction({
     inputNotes: [],
@@ -75,6 +68,8 @@ function prepareProofs() {
   proofHashes = proofOutputs.map(proofOutput => {
     return aztec.abiEncoder.outputCoder.hashProofOutput(proofOutput);
   });
+
+  mintAndApproveTokens();
 }
 
 async function mintAndApproveTokens() {
@@ -86,7 +81,7 @@ async function mintAndApproveTokens() {
   console.log("Minting ERC20 tokens...");
   const scalingFactor = new BN(10);
   const tokensTransferred = new BN(100000);
-  for (let i = 0 ; i < accounts.length; ++i) {
+  for (let i = 0 ; i < proofs.length; ++i) {
     const data = erc20Mintable
       .methods
       .mint(accounts[i].address, scalingFactor.mul(tokensTransferred).toString(10))
@@ -101,7 +96,7 @@ async function mintAndApproveTokens() {
 
   // Approve ERC20 spending
   console.log("Approving AZTEC to spend ERC20 tokens...");
-  for (let i = 0; i < accounts.length; ++i) {
+  for (let i = 0; i < proofs.length; ++i) {
     const data = erc20Mintable
       .methods
       .approve(noteRegistry.options.address, scalingFactor.mul(tokensTransferred).toString(10))
@@ -116,27 +111,25 @@ async function mintAndApproveTokens() {
 
   // Approve AZTEC spending
   console.log("Approving AZTEC to spend notes...");
-  const delta = 10;
-  let data = noteRegistry
-    .methods
-    .publicApprove(proofHashes[0], delta)
-    .encodeABI();
-  await sendTx({
-    from: accounts[0].address,
-    to: noteRegistry.options.address,
-    data: data,
-    privateKey: accounts[0].privateKey,
-  });
+  let delta = [10, 0];
+  for (let i = 0; i < proofs.length; ++i) {
+    let data = noteRegistry
+      .methods
+      .publicApprove(proofHashes[i], delta)
+      .encodeABI();
+    await sendTx({
+      from: accounts[i].address,
+      to: noteRegistry.options.address,
+      data: data,
+      privateKey: accounts[i].privateKey,
+    });
+  }
 
   await sendTransactions();
 }
 
-/**
- * 1. Convert a public ERC20 balance to AZTEC note
- * 2. Can update a note registry by consuming input notes, with kPublic negative
- */
 async function sendTransactions() {
-  console.log("Doing a confidential token transfer...")
+  console.log("Making a confidential token transfer...");
   let data = confidentialToken
     .methods
     .confidentialTransfer(proofs[0].proofData)
@@ -160,6 +153,4 @@ async function sendTransactions() {
   });
 }
 
-prepareNotes();
-prepareProofs();
-mintAndApproveTokens();
+prepareNotesAndProofs();
