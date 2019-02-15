@@ -4,11 +4,11 @@
   "author": "Paul Berg (https://paulrberg.com)",
   "description": "Step-by-step tutorial to get up and running with AZTEC",
   "dependencies": {
-    "@aztec/contract-addresses": "1.0.5",
-    "@aztec/contract-artifacts": "1.2.0",
-    "@aztec/dev-utils": "1.1.2",
-    "@aztec/protocol": "0.3.3",
-    "aztec.js": "0.3.3",
+    "@aztec/contract-addresses": "^1.1.1",
+    "@aztec/contract-artifacts": "^1.3.0",
+    "@aztec/dev-utils": "^1.2.0",
+    "@aztec/protocol": "0.4.0-beta.1",
+    "aztec.js": "^0.4.0-beta.11",
     "bn.js": "4.11.8",
     "ethereumjs-tx": "^1.3.7",
     "openzeppelin-solidity": "2.0.0",
@@ -28,8 +28,8 @@
     "protocol"
   ],
   "license": "MIT",
-  "main": "./src/tutorial.js",
+  "main": "./src/demo.js",
   "scripts": {
-    "demo": "node ./src/tutorial.js"
+    "demo": "node ./src/demo.js"
   }
 }

@@ -5,6 +5,8 @@ const { constants: { ERC20_SCALING_FACTOR } } = require("@aztec/dev-utils");
 const ZKERC20 = artifacts.require("./ZKERC20.sol");
 
 module.exports = (deployer) => {
+  // Cannot deploy locally because we need the ACE and the ERC20Mintable
+  // If you want to do that, go to https://github.com/AztecProtocol/AZTEC/tree/master/packages/protocol
   if (![NetworkId.Kovan, NetworkId.Rinkeby, NetworkId.Ropsten].includes(deployer.network_id)) {
     return true;
   }
@@ -12,10 +14,10 @@ module.exports = (deployer) => {
   const aceAddress = aztecAddresses.ace;
   const erc20Address = aztecAddresses.erc20Mintable;
 
-  // cocoa beans were used as money by Aztec people
+  // Cocoa beans were used as money by Aztec people
   const name = "Cocoa";
   
-  // we're pairing the confidential token with an ERC20, so we cannot mint or burn within this contract
+  // We're pairing the confidential token with an ERC20, so we cannot mint or burn within this contract
   const canMint = false;
   const canBurn = false;
   const canConvert = true;

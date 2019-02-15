@@ -3,6 +3,14 @@ require("dotenv").config();
 const HDWalletProvider = require("truffle-hdwallet-provider");
 
 const createProvider = (network) => {
+  if (!process.env.MNEMONIC) {
+    console.log("Please set your MNEMONIC in a .env file first");
+    process.exit(1);
+  }
+  if (!process.env.INFURA_API_KEY) {
+    console.log("Please set your INFURA_API_KEY in a .env file first");
+    process.exit(1);
+  }
   return () => {
     return new HDWalletProvider(
       process.env.MNEMONIC,
