@@ -44,10 +44,6 @@ async function prepareNotes() {
     aztec.note.create(aztecAccounts[1].publicKey, 8),
     aztec.note.create(aztecAccounts[0].publicKey, 2)
   ];
-
-  // The note registry's address is unique for each confidential token
-  const noteRegistryAddress = await confidentialToken.methods.noteRegistry().call();
-  noteRegistry = new web3.eth.Contract(aztecArtifacts.NoteRegistry.abi, noteRegistryAddress);
 }
 
 function prepareProofs() {
@@ -82,6 +78,10 @@ function prepareProofs() {
 }
 
 async function mintAndApproveTokens() {
+  // The note registry's address is unique for each confidential token
+  const noteRegistryAddress = await confidentialToken.methods.noteRegistry().call();
+  noteRegistry = new web3.eth.Contract(aztecArtifacts.NoteRegistry.abi, noteRegistryAddress);
+
   // Mint ERC20 tokens
   console.log("Minting ERC20 tokens...");
   const scalingFactor = new BN(10);
