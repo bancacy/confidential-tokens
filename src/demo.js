@@ -37,6 +37,7 @@ async function prepareNotes() {
   aztecAccounts = [...new Array(2)].map(() => aztec.secp256k1.generateAccount());
   await fs.writeFile(path.join(__dirname, "aztecAccounts.json"), JSON.stringify(aztecAccounts, null, 4));
 
+  process.exit(0);
   // Generate a bunch of random AZTEC notes
   notes = [
     aztec.note.create(aztecAccounts[0].publicKey, 5),
@@ -160,7 +161,6 @@ async function sendTransactions() {
   });
 }
 
-prepareAccounts();
 prepareNotes();
 prepareProofs();
 mintAndApproveTokens();
