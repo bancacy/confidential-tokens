@@ -21,10 +21,6 @@ let notes = [], proofs = [], proofHashes = [], proofOutputs = [];
 let joinSplit, confidentialToken, erc20Mintable, noteRegistry;
 
 // Get the Rinkeby contracts addresses
-if (!process.env.CONFIDENTIAL_TOKEN_ADDRESS) {
-    console.log("Please set your CONFIDENTIAL_TOKEN_ADDRESS in a .env file first");
-    process.exit(1);
-}
 const confidentialTokenAddress = '0x8A7e7dD1b736B37e953f35a4dC4d103113d3D9Ca';
 aztecAddresses = getContractAddressesForNetwork(NetworkId.Rinkeby);
 joinSplit = new web3.eth.Contract(aztecArtifacts.JoinSplit.abi, aztecAddresses.joinSplit);
