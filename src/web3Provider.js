@@ -1,6 +1,7 @@
 const Web3 = require("web3");
 
-const url = `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`;
-const web3 = new Web3(new Web3.providers.HttpProvider(url));
+const provider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws');
+const web3 = new Web3();
+web3.setProvider(provider);
 
 module.exports = web3;
