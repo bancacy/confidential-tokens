@@ -26,7 +26,7 @@ noteCoder.decodeNoteFromEventLog = (parameter) => {
     return noteCoder.encodeNotePublicKey({ gamma, sigma, ephemeral });
 };
 
-nodeCoder.fromEventLog = async (logNoteData, spendingKey = null) => {
+noteCoder.fromEventData = async (logNoteData, spendingKey = null) => {
     const publicKey = noteCoder.decodeNoteFromEventLog(logNoteData);
     const newNote = new aztec.note.Note(publicKey, null);
     if (spendingKey) {

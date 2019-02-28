@@ -31,9 +31,8 @@ joinSplit = new web3.eth.Contract(aztecArtifacts.JoinSplit.abi, aztecAddresses.j
 erc20Mintable = new web3.eth.Contract(aztecArtifacts.ERC20Mintable.abi, aztecAddresses.erc20Mintable);
 confidentialToken = new web3.eth.Contract(aztecArtifacts.ZKERC20.abi, confidentialTokenAddress);
 
+// -------------------------------------------------------------------------------
 async function getNotes() {
-    console.log('calling getNotes');
-
     const createEvents = await confidentialToken.getPastEvents('LogCreateNote', {
         filter: { _owner: account.address },
         fromBlock: 0,
@@ -44,65 +43,24 @@ async function getNotes() {
         fromBlock: 0,
         toBlock: 'latest'
     });
-    const notes = createEvents.filter((event) => {
-        let destroyed = false;
+    const notePromises = createEvents.filter((event) => {
+        let valid = true;
         destroyEvents.forEach((destroyEvent) => {
             if (destroyEvent.returnValues._noteHash === event.returnValues._noteHash) {
-                destroyed = true;
+                valid = false;
             }
         });
-        return destroyed;
+        return valid;
     }).map((event) => {
         const metadata = event.returnValues._metadata;
         return noteCoder.fromEventData(metadata, account.privateKey);
     });
+    const notes = await Promise.all(notePromises);
+    return notes;
     console.log('notes = ', notes);
 }
 
-async function confidentialTransfer(recipientPublicKey, value) {
-    console.log('collecting AZTEC notes...');
-    const noteCache = await getNotes();
-    let sum = 0;
-    const inputNotes = [];
-    let iterator = 0;
-    while (sum < value) {
-        if (iterator >= noteCache.length) {
-            throw new Error('balance insufficient!');
-        }
-        inputNotes.push(noteCache[iterator]);
-        sum += noteCache[iterator].k.toNumber();
-        iterator += 1;
-    }
-    const delta = sum - value;
-    const outputNotes = [
-        aztec.note.create(account.publicKey, remainder),
-        aztec.note.create(recipientPublicKey, value),
-    ];
-    console.log('encoding join-split transaction...');
-    const proof = aztec.note.joinSplit.encodeJoinSplitTransaction({
-        inputNotes,
-        outputNotes,
-        senderAddress: account.address,
-        inputNoteOwners: [account],
-        publicOwner: account.address,
-        kPublic: 0,
-        aztecAddress: joinSplit.options.address,
-    });
-    const data = confidentialToken
-        .methods
-        .confidentialTransfer(proof.proofData)
-        .encodeABI();
-
-    console.log('issuing confidential transfer...');
-    const receipt = await sendTx({
-        from: account.address,
-        to: confidentialToken.options.address,
-        data: data,
-        privateKey: account.privateKey,
-    });
-    console.log('confidential transfer has been mined!, receipt = ', receipt);
-}
-
+// -------------------------------------------------------------------------------
 // Prepare the notes and the contracts
 async function generateInitialNotes() {
     // Generate a bunch of random AZTEC notes
@@ -198,4 +156,54 @@ async function mintAndApproveTokens() {
     console.log('Mined confidential token transfer! receipt = ', JSON.stringify(receipt));
 }
 
+
+// -------------------------------------------------------------------------------
+async function confidentialTransfer(recipientPublicKey, value) {
+    console.log('collecting AZTEC notes...');
+    const noteCache = await getNotes();
+    console.log('note cache = ', noteCache);
+    let sum = 0;
+    const inputNotes = [];
+    let iterator = 0;
+    while (sum < value) {
+        if (iterator >= noteCache.length) {
+            throw new Error('balance insufficient!');
+        }
+        inputNotes.push(noteCache[iterator]);
+        sum += noteCache[iterator].k.toNumber();
+        iterator += 1;
+    }
+    const remainder = sum - value;
+    const outputNotes = [
+        aztec.note.create(account.publicKey, remainder),
+        aztec.note.create(recipientPublicKey, value),
+    ];
+    const inputNoteOwners = inputNotes.map(() => account);
+
+    const proof = aztec.proof.joinSplit.encodeJoinSplitTransaction({
+        inputNotes,
+        outputNotes,
+        senderAddress: account.address,
+        inputNoteOwners,
+        publicOwner: '',
+        kPublic: 0,
+        aztecAddress: joinSplit.options.address,
+    });
+
+    const data = confidentialToken
+        .methods
+        .confidentialTransfer(proof.proofData)
+        .encodeABI();
+
+    console.log('issuing confidential transfer...');
+    const receipt = await sendTx({
+        from: account.address,
+        to: confidentialToken.options.address,
+        data: data,
+        privateKey: account.privateKey,
+    });
+    console.log('confidential transfer has been mined!, receipt = ', JSON.stringify(receipt));
+}
+
+// confidentialTransfer('0x046ab29946a840fee08f4417ad14f6af3c7570281f1fe4243d3cc81ce40da6dccb8bcf7eac596677a90538d47b7d27fc04995bf96e36a5b2e1b672da0cb523d3e0', 10);
 generateInitialNotes();
