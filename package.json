@@ -30,6 +30,7 @@
   "license": "MIT",
   "main": "./src/demo.js",
   "scripts": {
+    "deploy": "node ./src/deploy.js",
     "demo": "node ./src/demo.js"
   }
 }

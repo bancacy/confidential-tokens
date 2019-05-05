@@ -1,27 +1,31 @@
-require("dotenv").config();
+require('dotenv').config();
 
-const aztec = require("aztec.js");
-const { getContractAddressesForNetwork, NetworkId } = require("@aztec/contract-addresses");
-const aztecArtifacts = require("@aztec/contract-artifacts");
-const { constants: { ERC20_SCALING_FACTOR } } = require("@aztec/dev-utils");
-
-const BN = require("bn.js");
-const path = require("path");
+// load 3rd party modules
+const BN = require('bn.js');
+const path = require('path');
 const fs = require('fs');
-const accounts = require(path.join(__dirname, "accounts"));
-const { sendTx } = require(path.join(__dirname, "tx"));
-const web3 = require(path.join(__dirname, "web3Provider"));
+
+// load aztec modules
+const aztec = require('aztec.js');
+const { getContractAddressesForNetwork, NetworkId } = require('@aztec/contract-addresses');
+const aztecArtifacts = require('@aztec/contract-artifacts');
+const { constants: { ERC20_SCALING_FACTOR } } = require('@aztec/dev-utils');
+
+const { sendTx } = require('./tx');
+
+// pull account out of accounts.js
+const accounts = require(path.join(__dirname, 'accounts'));
+const web3 = require(path.join(__dirname, 'web3Provider'));
 
 const noteCoder = require('./noteCoder');
 
 const account = aztec.secp256k1.accountFromPrivateKey(accounts[0].privateKey);
 
-console.log('account public key = ', account.publicKey);
 // Declare variables
 let notes = [], proofs = [], proofHashes = [], proofOutputs = [];
 
 // Get the Rinkeby contracts addresses
-const { confidentialTokenAddress } = JSON.parse(fs.readFileSync('zkAsset.json')); // '0x8A7e7dD1b736B37e953f35a4dC4d103113d3D9Ca';
+const { confidentialTokenAddress } = JSON.parse(fs.readFileSync('zkAsset.json'));
 aztecAddresses = getContractAddressesForNetwork(NetworkId.Rinkeby);
 
 const ACE = new web3.eth.Contract(aztecArtifacts.ACE.abi, aztecAddresses.ACE);
@@ -93,12 +97,8 @@ async function generateInitialNotes() {
 }
 
 async function mintAndApproveTokens() {
-    // The note registry's address is unique for each confidential token
-    // const noteRegistryAddress = await confidentialToken.methods.noteRegistry().call();
-    // noteRegistry = new web3.eth.Contract(aztecArtifacts.NoteRegistry.abi, noteRegistryAddress);
-
     // Mint ERC20 tokens
-    console.log("Minting ERC20 tokens...");
+    console.log('Minting ERC20 tokens...');
     const tokensTransferred = new BN(100000);
     const mintData = erc20Mintable
         .methods
@@ -112,7 +112,7 @@ async function mintAndApproveTokens() {
     });
 
     // Approve ERC20 spending
-    console.log("Approving AZTEC to spend ERC20 tokens...");
+    console.log('Approving AZTEC to spend ERC20 tokens...');
     const approveData = erc20Mintable
         .methods
         .approve(aztecAddresses.ACE, ERC20_SCALING_FACTOR.mul(tokensTransferred).toString(10))
@@ -125,7 +125,7 @@ async function mintAndApproveTokens() {
     });
 
     // Approve AZTEC spending
-    console.log("Approving AZTEC to spend notes...");
+    console.log('Approving AZTEC to spend notes...');
     for (let i = 0; i < proofs.length; ++i) {
         let data = ACE
             .methods
@@ -139,7 +139,7 @@ async function mintAndApproveTokens() {
         });
     }
 
-    console.log("Making a confidential token transfer...");
+    console.log('Making a confidential token transfer...');
     let data = confidentialToken
         .methods
         .confidentialTransfer(proofs[0].proofData)
