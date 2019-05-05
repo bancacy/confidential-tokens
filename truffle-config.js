@@ -1,6 +1,9 @@
 require("dotenv").config();
 
-const HDWalletProvider = require("truffle-hdwallet-provider");
+const Web3 = require('web3');
+
+// const HDWalletProvider = require("truffle-hdwallet-provider");
+
 
 const createProvider = (network) => {
   if (!process.env.MNEMONIC) {
@@ -12,23 +15,25 @@ const createProvider = (network) => {
     process.exit(1);
   }
   return () => {
-    return new HDWalletProvider(
-      process.env.MNEMONIC,
-      `https://${network}.infura.io/v3/` + process.env.INFURA_API_KEY
-    );
+      return new Web3.providers.HttpProvider(`https://${network}.infura.io/v3/` + process.env.INFURA_API_KEY);
+    // return new HDWalletProvider(
+    //   process.env.MNEMONIC,
+    //   `https://${network}.infura.io/v3/` + process.env.INFURA_API_KEY
+    // );
   };
 };
 
 module.exports = {
   compilers: {
     solc: {
-      version: "0.4.24",
+      version: "0.5.8",
       settings: {
         optimizer: {
           enabled: true,
           runs: 200
-        }
-      }
+        },
+        evmVersion: 'petersburg',
+      },
     }
   },
   networks: {

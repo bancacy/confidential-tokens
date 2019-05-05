@@ -15,21 +15,18 @@ module.exports = (deployer) => {
   const erc20Address = aztecAddresses.erc20Mintable;
 
   // Cocoa beans were used as money by Aztec people
-  const name = "Cocoa";
+  // const name = "Cocoa";
   
   // We're pairing the confidential token with an ERC20, so we cannot mint or burn within this contract
-  const canMint = false;
-  const canBurn = false;
+  const canMintAndBurn = false;
   const canConvert = true;
 
   return deployer.deploy(
     ZKERC20,
-    name,
-    canMint,
-    canBurn,
-    canConvert,
-    ERC20_SCALING_FACTOR.toString(10),
-    erc20Address,
     aceAddress
+    erc20Address,
+    ERC20_SCALING_FACTOR.toString(10),
+    canConvert,
+    canMintAndBurn,
   );
 };

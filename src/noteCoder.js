@@ -19,14 +19,14 @@ noteCoder.decodeNoteFromEventLog = (parameter) => {
     }
     const gammaCompressed = parameter.slice(0x02, 0x42);
     const sigmaCompressed = parameter.slice(0x42, 0x82);
-    const ephemeralCompressed = parameter.slice(0x82, 0x1c4);
+    const ephemeralCompressed = parameter.slice(0x82, 196);
     const gamma = bn128.decompressHex(gammaCompressed);
     const sigma = bn128.decompressHex(sigmaCompressed);
     const ephemeral = secp256k1.decompressHex(ephemeralCompressed);
     return noteCoder.encodeNotePublicKey({ gamma, sigma, ephemeral });
 };
 
-noteCoder.fromEventData = async (logNoteData, spendingKey = null) => {
+noteCoder.fromEventData = async (logNoteData, spendingKey = null, ...rest) => {
     const publicKey = noteCoder.decodeNoteFromEventLog(logNoteData);
     const newNote = new aztec.note.Note(publicKey, null);
     if (spendingKey) {
